@@ -201,7 +201,7 @@ export default function Footer() {
             </Text>
           </Flex>
           <Text fontSize={"sm"} textAlign={"center"} color={"gray.400"}>
-            © 2023 E-Shop Official. All rights reserved by Satyam Banwale.
+            © 2025 E-Shop Official. All rights reserved by Sunil Karrenolla.
           </Text>
           <Stack direction={"row"} spacing={6}>
             <Link
