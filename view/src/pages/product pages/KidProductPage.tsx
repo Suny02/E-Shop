@@ -14,10 +14,9 @@ import { KidProducts } from "../../utils/types";
 import { ArrowBackIcon, ArrowForwardIcon, SearchIcon } from "@chakra-ui/icons";
 import { sortByCategory, sortByGender } from "../../config/kidData";
 import { DebounceInput } from "react-debounce-input";
-import { useAddToCart } from "../../utils/cartUtils"; // ✅ Added import
 
 const KidProductPage = () => {
-  const [data, setData] = useState<KidProducts[]>([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -26,8 +25,6 @@ const KidProductPage = () => {
   const [sortPrice, setSortPrice] = useState("");
   const [order, setOrder] = useState("discount_price");
   const [limit, setLimit] = useState<string | number>(25);
-
-  const { handleAddToCart } = useAddToCart(); // ✅ use custom hook
 
   const getData = async () => {
     setLoading(true);
@@ -97,7 +94,6 @@ const KidProductPage = () => {
               />
             </Flex>
           </Flex>
-
           <Flex
             w="98%"
             m="auto"
@@ -111,10 +107,134 @@ const KidProductPage = () => {
               flexDirection={"column"}
               mt="20px"
             >
-              {/* Filters unchanged */}
+              <Text
+                fontWeight={"bold"}
+                mt="20px"
+                fontSize={{ base: "15px", lg: "20px" }}
+                color={"#f24973"}
+              >
+                Filters
+              </Text>
+              <Box bgColor={"gray.100"} p="20px" mt="15px" lineHeight={"30px"}>
+                <Text
+                  color={"#f24973"}
+                  fontSize={{ base: "12px", lg: "15px" }}
+                  mb="10px"
+                >
+                  Items Per Page
+                </Text>
+                <hr />
+                <Flex justifyContent={"center"} m="auto" gap="10px">
+                  <select
+                    onChange={(e) => setLimit(e.target.value)}
+                    style={{ width: "80px" }}
+                  >
+                    <option value={15}>Default</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={30}>30</option>
+                    <option value={40}>40</option>
+                    <option value={50}>50</option>
+                  </select>
+                </Flex>
+              </Box>
+              <Box bgColor={"gray.100"} p="20px" mt="15px" lineHeight={"30px"}>
+                <Text
+                  color={"#f24973"}
+                  fontSize={{ base: "12px", lg: "15px" }}
+                  mb="10px"
+                  fontWeight={"600"}
+                >
+                  SORT BY CATEGORY
+                </Text>
+                <hr />
+                {sortByCategory.map((el, i) => (
+                  <Flex
+                    key={i}
+                    justifyContent={"space-between"}
+                    m="auto"
+                    gap="10px"
+                    w="80%"
+                  >
+                    <Text fontSize={{ base: "10px", md: "12px", lg: "15px" }}>
+                      {el}
+                    </Text>
+                    <input
+                      type="checkbox"
+                      value={el}
+                      checked={category === el}
+                      onChange={() => setCategory(el)}
+                    />
+                  </Flex>
+                ))}
+              </Box>
+              <Box bgColor={"gray.100"} p="20px" mt="15px" lineHeight={"30px"}>
+                <Text
+                  color={"#f24973"}
+                  fontSize={{ base: "12px", lg: "15px" }}
+                  mb="10px"
+                  fontWeight={"600"}
+                >
+                  SORT BY GENDER
+                </Text>
+                <hr />
+                {sortByGender.map((el, i) => (
+                  <Flex
+                    key={i}
+                    justifyContent={"space-between"}
+                    m="auto"
+                    gap="10px"
+                    w="80%"
+                  >
+                    <Text fontSize={{ base: "10px", md: "12px", lg: "15px" }}>
+                      {el}
+                    </Text>
+                    <input
+                      type="checkbox"
+                      value={el}
+                      checked={gender === el}
+                      onChange={() => setGender(el)}
+                    />
+                  </Flex>
+                ))}
+              </Box>
+              <Box bgColor={"gray.100"} p="20px" mt="15px" lineHeight={"30px"}>
+                <Text
+                  color={"#f24973"}
+                  fontSize={{ base: "12px", lg: "15px" }}
+                  mb="10px"
+                >
+                  SORT BY PRICE
+                </Text>
+                <hr />
+                <Flex
+                  justifyContent={"center"}
+                  flexDirection={{ base: "column", md: "row" }}
+                  m="auto"
+                  gap="10px"
+                >
+                  <select
+                    onChange={(e) => setOrder(e.target.value)}
+                    style={{ width: "80px" }}
+                  >
+                    <option>Sort By</option>
+                    <option value="rating">Rating</option>
+                    <option value="discount_price">Price</option>
+                  </select>
+                  <select
+                    onChange={(e) => setSortPrice(e.target.value)}
+                    style={{ width: "80px" }}
+                  >
+                    <option>Order</option>
+                    <option value="asc">Low to High</option>
+                    <option value="desc">High to Low</option>
+                  </select>
+                </Flex>
+              </Box>
             </Box>
 
             <Box
+              //   border={"solid 1px red"}
               w={{ base: "70%", lg: "75%" }}
               display={"grid"}
               gridTemplateColumns={{
@@ -126,91 +246,102 @@ const KidProductPage = () => {
               gap={{ base: "0px", lg: "20px" }}
             >
               {data.map((el: KidProducts) => (
-                el.visible && (
-                  <Box
-                    key={el._id}
-                    p={{ base: "2px", lg: "20px" }}
-                    borderRadius={"10%"}
-                    boxShadow="rgba(99, 99, 99, 0.2) 0px 2px 8px 0px"
-                    m="auto"
-                    mt="25px"
-                    h={{ base: "255px", md: "365px", lg: "425px" }}
-                    display="flex"
-                    flexDirection="column"
-                    justifyContent="space-between"
-                  >
-                    <Link href={`/kids/${el._id}`}>
-                      <Image
-                        m="auto"
-                        w={{ base: "100px", md: "180px", lg: "200px" }}
-                        h={{ base: "150px", md: "250px", lg: "270px" }}
-                        src={el.image}
-                        alt="product_img"
-                      />
-                      <Heading
-                        m="auto"
-                        textAlign={"center"}
-                        mt="5px"
-                        fontSize={{ base: "16px", md: "18px", lg: "20px" }}
-                        color={"#f24973"}
-                      >
-                        {el.heading}
-                      </Heading>
-                    </Link>
-                    <Flex
-                      justifyContent={"center"}
-                      w={{ base: "100px", md: "180px", lg: "200px" }}
+                <>
+                  {el.visible === true ? (
+                    <Box
+                      p={{ base: "2px", lg: "20px" }}
+                      borderRadius={"10%"}
+                      boxShadow="rgba(99, 99, 99, 0.2) 0px 2px 8px 0px"
                       m="auto"
+                      mt="25px"
+                      h={{ base: "255px", md: "365px", lg: "425px" }}
                     >
-                      <Text
+                      <Link href={`/kids/${el._id}`}>
+                        <Image
+                          m="auto"
+                          w={{ base: "100px", md: "180px", lg: "200px" }}
+                          h={{ base: "150px", md: "250px", lg: "270px" }}
+                          src={el.image}
+                          alt="product_img"
+                        />
+                        <Heading
+                          m="auto"
+                          textAlign={"center"}
+                          mt="5px"
+                          fontSize={{ base: "16px", md: "18px", lg: "20px" }}
+                          color={"#f24973"}
+                        >
+                          {el.heading}
+                        </Heading>
+                      </Link>
+                      <Flex
+                        justifyContent={"center"}
+                        w={{ base: "100px", md: "180px", lg: "200px" }}
                         m="auto"
-                        whiteSpace={"nowrap"}
-                        overflow={"hidden"}
-                        textAlign={"center"}
-                        w={{ base: "90px", md: "180px", lg: "250px" }}
-                        fontSize={{ base: "12px", md: "14px", lg: "16.5px" }}
                       >
-                        {el.title}
-                      </Text>
-                    </Flex>
-                    <Text fontSize={{ base: "14px", md: "16px", lg: "18px" }} color="green">
-                      {el.discount}
-                    </Text>
-                    <Flex justifyContent={"center"} gap="15px">
-                      <Text fontSize={{ base: "12px", md: "15px", lg: "18px" }} fontWeight={"600"}>
-                        ₹{el.discount_price}
-                      </Text>
+                        <Text
+                          m="auto"
+                          whiteSpace={"nowrap"}
+                          overflow={"hidden"}
+                          textAlign={"center"}
+                          w={{ base: "90px", md: "180px", lg: "250px" }}
+                          fontSize={{ base: "12px", md: "14px", lg: "16.5px" }}
+                        >
+                          {el.title}
+                        </Text>
+                        <Text
+                          ml="-7px"
+                          w={{ base: "10px", md: "10px", lg: "30px" }}
+                        >
+                          ..
+                        </Text>
+                      </Flex>
                       <Text
-                        color="red"
-                        fontSize={{ base: "12px", md: "15px", lg: "18px" }}
-                        textDecoration={"line-through"}
-                        fontWeight={"600"}
+                        fontSize={{ base: "14px", md: "16px", lg: "18px" }}
+                        color="green"
                       >
-                        ₹{el.original_price}
+                        {el.discount}
                       </Text>
-                    </Flex>
-                    <Text fontSize={{ base: "10px", md: "14px", lg: "16.5px" }}>{el.offer}</Text>
-                    {el.availability && (
-                      <Text color="red" fontSize={{ base: "12px", lg: "16.5px" }}>
-                        {el.availability}
-                      </Text>
-                    )}
+                      <Flex justifyContent={"center"} gap="15px">
+                        <Text
+                          fontSize={{ base: "12px", md: "15px", lg: "18px" }}
+                          fontWeight={"600"}
+                        >
+                          ₹{el.discount_price}
+                        </Text>
+                        <Text
+                          color="red"
+                          fontSize={{ base: "12px", md: "15px", lg: "18px" }}
+                          textDecoration={"line-through"}
+                          fontWeight={"600"}
+                        >
+                          ₹{el.original_price}
+                        </Text>
+                      </Flex>
 
-                    {/* Unified Add to Cart Button */}
-                    <Button
-                      mt={3}
-                      colorScheme="pink"
-                      size="sm"
-                      onClick={() => handleAddToCart(el)}
-                    >
-                      Add to Cart
-                    </Button>
-                  </Box>
-                )
+                      <Text
+                        fontSize={{ base: "10px", md: "14px", lg: "16.5px" }}
+                      >
+                        {el.offer}
+                      </Text>
+                      {el.availability === "" ? (
+                        ""
+                      ) : (
+                        <Text
+                          color="red"
+                          fontSize={{ base: "12px", lg: "16.5px" }}
+                        >
+                          {el.availability}
+                        </Text>
+                      )}
+                    </Box>
+                  ) : (
+                    ""
+                  )}
+                </>
               ))}
             </Box>
           </Flex>
-
           <Flex gap="20px" justifyContent={"center"} m="auto" mt="30px">
             <Button
               color={"#f24973"}
