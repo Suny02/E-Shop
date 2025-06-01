@@ -14,6 +14,7 @@ import { KidProducts } from "../../utils/types";
 import { ArrowBackIcon, ArrowForwardIcon, SearchIcon } from "@chakra-ui/icons";
 import { sortByCategory, sortByGender } from "../../config/kidData";
 import { DebounceInput } from "react-debounce-input";
+import { useAddToCart } from "../../utils/cartUtils"; // ✅ Added import
 
 const KidProductPage = () => {
   const [data, setData] = useState<KidProducts[]>([]);
@@ -25,6 +26,8 @@ const KidProductPage = () => {
   const [sortPrice, setSortPrice] = useState("");
   const [order, setOrder] = useState("discount_price");
   const [limit, setLimit] = useState<string | number>(25);
+
+  const { handleAddToCart } = useAddToCart(); // ✅ use custom hook
 
   const getData = async () => {
     setLoading(true);
@@ -41,12 +44,6 @@ const KidProductPage = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-  };
-
-  // Handle add to cart button click
-  const handleAddToCart = (product: KidProducts) => {
-    console.log("Adding to cart:", product);
-    // You can replace this with actual add to cart logic
   };
 
   useEffect(() => {
@@ -100,6 +97,7 @@ const KidProductPage = () => {
               />
             </Flex>
           </Flex>
+
           <Flex
             w="98%"
             m="auto"
@@ -113,8 +111,7 @@ const KidProductPage = () => {
               flexDirection={"column"}
               mt="20px"
             >
-              {/* Filters code unchanged */}
-              {/* ... */}
+              {/* Filters unchanged */}
             </Box>
 
             <Box
@@ -129,115 +126,91 @@ const KidProductPage = () => {
               gap={{ base: "0px", lg: "20px" }}
             >
               {data.map((el: KidProducts) => (
-                <>
-                  {el.visible === true ? (
-                    <Box
-                      key={el._id}
-                      p={{ base: "2px", lg: "20px" }}
-                      borderRadius={"10%"}
-                      boxShadow="rgba(99, 99, 99, 0.2) 0px 2px 8px 0px"
-                      m="auto"
-                      mt="25px"
-                      h={{ base: "255px", md: "365px", lg: "425px" }}
-                      display="flex"
-                      flexDirection="column"
-                      justifyContent="space-between"
-                    >
-                      <Link href={`/kids/${el._id}`}>
-                        <Image
-                          m="auto"
-                          w={{ base: "100px", md: "180px", lg: "200px" }}
-                          h={{ base: "150px", md: "250px", lg: "270px" }}
-                          src={el.image}
-                          alt="product_img"
-                        />
-                        <Heading
-                          m="auto"
-                          textAlign={"center"}
-                          mt="5px"
-                          fontSize={{ base: "16px", md: "18px", lg: "20px" }}
-                          color={"#f24973"}
-                        >
-                          {el.heading}
-                        </Heading>
-                      </Link>
-                      <Flex
-                        justifyContent={"center"}
-                        w={{ base: "100px", md: "180px", lg: "200px" }}
+                el.visible && (
+                  <Box
+                    key={el._id}
+                    p={{ base: "2px", lg: "20px" }}
+                    borderRadius={"10%"}
+                    boxShadow="rgba(99, 99, 99, 0.2) 0px 2px 8px 0px"
+                    m="auto"
+                    mt="25px"
+                    h={{ base: "255px", md: "365px", lg: "425px" }}
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="space-between"
+                  >
+                    <Link href={`/kids/${el._id}`}>
+                      <Image
                         m="auto"
+                        w={{ base: "100px", md: "180px", lg: "200px" }}
+                        h={{ base: "150px", md: "250px", lg: "270px" }}
+                        src={el.image}
+                        alt="product_img"
+                      />
+                      <Heading
+                        m="auto"
+                        textAlign={"center"}
+                        mt="5px"
+                        fontSize={{ base: "16px", md: "18px", lg: "20px" }}
+                        color={"#f24973"}
                       >
-                        <Text
-                          m="auto"
-                          whiteSpace={"nowrap"}
-                          overflow={"hidden"}
-                          textAlign={"center"}
-                          w={{ base: "90px", md: "180px", lg: "250px" }}
-                          fontSize={{ base: "12px", md: "14px", lg: "16.5px" }}
-                        >
-                          {el.title}
-                        </Text>
-                        <Text
-                          ml="-7px"
-                          w={{ base: "10px", md: "10px", lg: "30px" }}
-                        >
-                          ..
-                        </Text>
-                      </Flex>
+                        {el.heading}
+                      </Heading>
+                    </Link>
+                    <Flex
+                      justifyContent={"center"}
+                      w={{ base: "100px", md: "180px", lg: "200px" }}
+                      m="auto"
+                    >
                       <Text
-                        fontSize={{ base: "14px", md: "16px", lg: "18px" }}
-                        color="green"
+                        m="auto"
+                        whiteSpace={"nowrap"}
+                        overflow={"hidden"}
+                        textAlign={"center"}
+                        w={{ base: "90px", md: "180px", lg: "250px" }}
+                        fontSize={{ base: "12px", md: "14px", lg: "16.5px" }}
                       >
-                        {el.discount}
+                        {el.title}
                       </Text>
-                      <Flex justifyContent={"center"} gap="15px">
-                        <Text
-                          fontSize={{ base: "12px", md: "15px", lg: "18px" }}
-                          fontWeight={"600"}
-                        >
-                          ₹{el.discount_price}
-                        </Text>
-                        <Text
-                          color="red"
-                          fontSize={{ base: "12px", md: "15px", lg: "18px" }}
-                          textDecoration={"line-through"}
-                          fontWeight={"600"}
-                        >
-                          ₹{el.original_price}
-                        </Text>
-                      </Flex>
-
+                    </Flex>
+                    <Text fontSize={{ base: "14px", md: "16px", lg: "18px" }} color="green">
+                      {el.discount}
+                    </Text>
+                    <Flex justifyContent={"center"} gap="15px">
+                      <Text fontSize={{ base: "12px", md: "15px", lg: "18px" }} fontWeight={"600"}>
+                        ₹{el.discount_price}
+                      </Text>
                       <Text
-                        fontSize={{ base: "10px", md: "14px", lg: "16.5px" }}
+                        color="red"
+                        fontSize={{ base: "12px", md: "15px", lg: "18px" }}
+                        textDecoration={"line-through"}
+                        fontWeight={"600"}
                       >
-                        {el.offer}
+                        ₹{el.original_price}
                       </Text>
-                      {el.availability === "" ? (
-                        ""
-                      ) : (
-                        <Text
-                          color="red"
-                          fontSize={{ base: "12px", lg: "16.5px" }}
-                        >
-                          {el.availability}
-                        </Text>
-                      )}
+                    </Flex>
+                    <Text fontSize={{ base: "10px", md: "14px", lg: "16.5px" }}>{el.offer}</Text>
+                    {el.availability && (
+                      <Text color="red" fontSize={{ base: "12px", lg: "16.5px" }}>
+                        {el.availability}
+                      </Text>
+                    )}
 
-                      {/* ADD TO CART BUTTON */}
-                      <Button
-                        mt={3}
-                        colorScheme="pink"
-                        onClick={() => handleAddToCart(el)}
-                      >
-                        Add to Cart
-                      </Button>
-                    </Box>
-                  ) : (
-                    ""
-                  )}
-                </>
+                    {/* Unified Add to Cart Button */}
+                    <Button
+                      mt={3}
+                      colorScheme="pink"
+                      size="sm"
+                      onClick={() => handleAddToCart(el)}
+                    >
+                      Add to Cart
+                    </Button>
+                  </Box>
+                )
               ))}
             </Box>
           </Flex>
+
           <Flex gap="20px" justifyContent={"center"} m="auto" mt="30px">
             <Button
               color={"#f24973"}
