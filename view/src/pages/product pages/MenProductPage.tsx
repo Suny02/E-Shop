@@ -1,3 +1,5 @@
+// src/pages/MenProductPage.tsx
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -14,86 +16,61 @@ import {
   AlertTitle,
 } from "@chakra-ui/react";
 import axios from "axios";
-import React, { useEffect, useMemo, useState } from "react";
-import { MenProducts } from "../../utils/types";
-import {
-  ArrowBackIcon,
-  ArrowDownIcon,
-  ArrowForwardIcon,
-  SearchIcon,
-} from "@chakra-ui/icons";
-import {
-  sortByCategory,
-  sortByJeans,
-  sortByShoes,
-  sortByTshirt,
-  sortByWatches,
-} from "../../config/menData";
 import { DebounceInput } from "react-debounce-input";
 import { useSearchParams } from "react-router-dom";
+import {
+  menSortByCategory,
+  menSortByTshirt,
+  menSortByJeans,
+  menSortByShoes,
+  menSortByWatches,
+} from "../config/filterData";
+import Pagination from "../components/Pagination";
 
 const MenProductPage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [limit, setLimit] = useState(20);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [limit, setLimit] = useState<string | number>(20);
-
-  const memoizedSearchParams: any = useMemo(() => searchParams, [searchParams]);
-  const sortBy = memoizedSearchParams.getAll("sortBy") || "";
-  const orderBy = memoizedSearchParams.getAll("order");
-  const category = memoizedSearchParams.getAll("category");
-  const brand = memoizedSearchParams.getAll("brand");
-  const [sortByBrand, setBrand] = useState("All");
-  const [order, setOrder] = useState(orderBy || "");
-  const [categoryBy, setCategoryBy] = useState("All");
   const toast = useToast();
 
-  const categorySet = (e: any) => {
-    setSearchParams({ category: e.target.value, brand, sortBy, orderBy });
-    setCategoryBy(e.target.value);
+  const category = searchParams.get("category") || "All";
+  const brand = searchParams.get("brand") || "All";
+  const sortBy = searchParams.get("sortBy") || "";
+  const order = searchParams.get("order") || "";
+
+  const setCategory = (e) => {
+    setSearchParams({ category: e.target.value, brand, sortBy, order });
   };
 
-  const brandSet = (e: any) => {
-    setSearchParams({ category, brand: e.target.value, sortBy, orderBy });
-    setBrand(e.target.value);
+  const setBrand = (e) => {
+    setSearchParams({ category, brand: e.target.value, sortBy, order });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const setSort = (e) => {
+    setSearchParams({ category, brand, sortBy: e.target.value, order: "asc" });
   };
 
-  const selectSortName = (e: any) => {
-    setSearchParams({
-      category,
-      brand,
-      sortBy: e.target.value,
-      orderBy: "asc",
-    });
-  };
-  const selectOrder = (e: any) => {
-    sortByBrand === "All"
-      ? toast({
-          duration: 5000,
-          isClosable: true,
-          render: () => (
-            <Alert status="warning" borderRadius="lg" bg="orange" color="white">
-              <AlertIcon />
-              <AlertTitle mb={0} mr={2} fontSize="md">
-                Please Select Category First
-              </AlertTitle>
-              <CloseButton position="absolute" right="8px" top="8px" />
-            </Alert>
-          ),
-        })
-      : setSearchParams({
-          category,
-          brand,
-          sortBy,
-          order: e.target.value,
-        });
-    setOrder(orderBy);
+  const setOrderBy = (e) => {
+    if (category === "All") {
+      toast({
+        duration: 5000,
+        isClosable: true,
+        render: () => (
+          <Alert status="warning" borderRadius="lg" bg="orange" color="white">
+            <AlertIcon />
+            <AlertTitle mb={0} mr={2} fontSize="md">
+              Please Select Category First
+            </AlertTitle>
+            <CloseButton position="absolute" right="8px" top="8px" />
+          </Alert>
+        ),
+      });
+    } else {
+      setSearchParams({ category, brand, sortBy, order: e.target.value });
+    }
   };
 
   useEffect(() => {
@@ -101,16 +78,16 @@ const MenProductPage = () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `https://e-shop-215k.onrender.com/mens?page=${page}&limit=${limit}&category=${category}&brand=${sortByBrand}&sort=${sortBy},${order}&search=${search}`
+          `https://e-shop-215k.onrender.com/mens?page=${page}&limit=${limit}&category=${category}&brand=${brand}&sort=${sortBy}&order=${order}&search=${search}`
         );
         setData(res.data.men);
-        setLoading(false);
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
+      setLoading(false);
     };
     fetchData();
-  }, [page, limit, categoryBy, sortByBrand, search, order]);
+  }, [page, limit, category, brand, sortBy, order, search]);
 
   return (
     <>
@@ -124,6 +101,7 @@ const MenProductPage = () => {
             w="95%"
             flexDirection={{ base: "column", md: "row" }}
             alignItems={"center"}
+            justifyContent={"space-between"}
           >
             <Box>
               <Link href={"/mens"}>
@@ -137,49 +115,37 @@ const MenProductPage = () => {
               alignItems={"center"}
               border={"solid 1px pink"}
               h={"50px"}
+              mb={{ base: "15px", md: "0" }}
             >
-              <Box
-                ml="20px"
-                pointerEvents="none"
-                children={<SearchIcon color="gray.300" />}
-              />
+              <Box ml="20px" pointerEvents="none">
+                <Image src="/search-icon.svg" alt="search icon" />
+              </Box>
               <DebounceInput
                 style={{
                   marginLeft: "20px",
                   width: "100%",
                   border: "none",
-                  borderColor: "transparent",
                   padding: "10px",
                   outline: "none",
                 }}
                 debounceTimeout={2000}
                 value={search}
                 placeholder="Search in Men-Collection"
-                onChange={handleChange}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </Flex>
           </Flex>
-          <Flex
-            w="98%"
-            m="auto"
-            gap={{ base: 2, lg: 5 }}
-            justifyContent={"center"}
-          >
+
+          <Flex w="98%" m="auto" gap={{ base: 2, lg: 5 }} justifyContent={"center"}>
             <Box
               boxShadow="rgba(0, 0, 0, 0.1) 0px 4px 12px"
               w={{ base: "25%", lg: "20%" }}
               display={"flex"}
               flexDirection={"column"}
               mt="20px"
+              p="10px"
             >
-              <Text
-                fontWeight={"bold"}
-                mt="20px"
-                fontSize={{ base: "20px", lg: "25px" }}
-                color={"#f24973"}
-              >
-                FILTERS
-              </Text>
+              {/* ITEMS PER PAGE */}
               <Box bgColor={"gray.100"} p="20px" mt="15px" lineHeight={"30px"}>
                 <Text
                   color={"#f24973"}
@@ -190,20 +156,22 @@ const MenProductPage = () => {
                   ITEMS PER PAGE
                 </Text>
                 <hr />
-                <Flex justifyContent={"center"} m="auto" gap="10px">
+                <Flex justifyContent={"center"} m="auto" gap="10px" mt="10px">
                   <select
-                    onChange={(e) => setLimit(e.target.value)}
+                    onChange={(e) => setLimit(Number(e.target.value))}
                     style={{ width: "80px" }}
+                    value={limit}
                   >
-                    <option value={25}>Default</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={30}>30</option>
-                    <option value={40}>40</option>
-                    <option value={50}>50</option>
+                    {[10, 20, 25, 30, 40, 50].map((num) => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
                   </select>
                 </Flex>
               </Box>
+
+              {/* CATEGORY FILTER */}
               <Box bgColor={"gray.100"} p="20px" mt="15px" lineHeight={"30px"}>
                 <Text
                   color={"#f24973"}
@@ -214,26 +182,30 @@ const MenProductPage = () => {
                   SORT BY CATEGORY
                 </Text>
                 <hr />
-                {sortByCategory.map((product, i) => (
+                {["All", ...menSortByCategory].map((product, i) => (
                   <Flex
                     key={i}
                     justifyContent={"space-between"}
                     m="auto"
                     gap="10px"
                     w="80%"
+                    mt="8px"
                   >
                     <Text fontSize={{ base: "10px", md: "12px", lg: "15px" }}>
                       {product}
                     </Text>
                     <input
-                      type="checkbox"
+                      type="radio"
+                      name="category"
                       value={product}
-                      checked={category[0] === product}
-                      onChange={categorySet}
+                      checked={category === product}
+                      onChange={setCategory}
                     />
                   </Flex>
                 ))}
               </Box>
+
+              {/* BRAND FILTER */}
               <Box bgColor={"gray.100"} p="20px" mt="15px" lineHeight={"30px"}>
                 <Text
                   color={"#f24973"}
@@ -244,313 +216,141 @@ const MenProductPage = () => {
                   SORT BY BRAND
                 </Text>
                 <hr />
-
-                <Flex
-                  justifyContent={"center"}
-                  w={{ lg: "83%" }}
-                  alignItems={"center"}
-                  gap="10px"
-                  mt="10px"
-                >
-                  <Text
-                    color="blue"
-                    fontSize={{ base: "8px", md: "10px", lg: "13px" }}
-                  >
-                    Shirts & T-Shirts Brands
-                  </Text>
-                  <ArrowDownIcon />
-                </Flex>
-                <hr />
-                {sortByTshirt.map((product: any, i: number) => (
-                  <Flex
-                    w="80%"
-                    key={i}
-                    justifyContent={"space-between"}
-                    m="auto"
-                    gap="10px"
-                  >
-                    <Text fontSize={{ base: "10px", md: "12px", lg: "15px" }}>
-                      {product}
-                    </Text>
-                    <input
-                      type="radio"
-                      value={product}
-                      checked={brand[0] === product}
-                      onChange={brandSet}
-                    />
-                  </Flex>
-                ))}
-                <Flex
-                  justifyContent={"center"}
-                  w={{ lg: "79%" }}
-                  alignItems={"center"}
-                  gap="10px"
-                  mt="10px"
-                >
-                  <Text
-                    color="blue"
-                    fontSize={{ base: "8px", md: "10px", lg: "13px" }}
-                  >
-                    Pants & Jeans Brands
-                  </Text>
-                  <ArrowDownIcon />
-                </Flex>
-                <hr />
-                {sortByJeans.map((product, i: number) => (
-                  <Flex
-                    w="80%"
-                    key={i}
-                    justifyContent={"space-between"}
-                    m="auto"
-                    gap="10px"
-                  >
-                    <Text fontSize={{ base: "10px", md: "12px", lg: "15px" }}>
-                      {product}
-                    </Text>
-                    <input
-                      type="radio"
-                      value={product}
-                      checked={brand[0] === product}
-                      onChange={brandSet}
-                    />
-                  </Flex>
-                ))}
-                <Flex
-                  justifyContent={"center"}
-                  w={{ lg: "86%" }}
-                  alignItems={"center"}
-                  mt="10px"
-                  gap="10px"
-                >
-                  <Text
-                    color="blue"
-                    fontSize={{ base: "8px", md: "10px", lg: "13px" }}
-                  >
-                    Shoes & Sandals Brands
-                  </Text>
-                  <ArrowDownIcon />
-                </Flex>
-                <hr />
-                {sortByShoes.map((product, i: number) => (
-                  <Flex
-                    w="80%"
-                    key={i}
-                    justifyContent={"space-between"}
-                    m="auto"
-                    gap="10px"
-                  >
-                    <Text fontSize={{ base: "10px", md: "12px", lg: "15px" }}>
-                      {product}
-                    </Text>
-                    <input
-                      type="radio"
-                      value={product}
-                      checked={brand[0] === product}
-                      onChange={brandSet}
-                    />
-                  </Flex>
-                ))}
-                <Flex
-                  justifyContent={"center"}
-                  w={{ lg: "67%" }}
-                  alignItems={"center"}
-                  mt="10px"
-                  gap="10px"
-                >
-                  <Text
-                    color="blue"
-                    fontSize={{ base: "8px", md: "10px", lg: "13px" }}
-                  >
-                    Watches Brands
-                  </Text>
-                  <ArrowDownIcon />
-                </Flex>
-                <hr />
-                {sortByWatches.map((product: any, i: number) => (
-                  <Flex
-                    w="80%"
-                    key={i}
-                    justifyContent={"space-between"}
-                    m="auto"
-                    gap="10px"
-                  >
-                    <Text fontSize={{ base: "10px", md: "12px", lg: "15px" }}>
-                      {product}
-                    </Text>
-                    <input
-                      type="radio"
-                      value={product}
-                      checked={brand[0] === product}
-                      onChange={brandSet}
-                    />
-                  </Flex>
-                ))}
+                {["All", ...menSortByTshirt, ...menSortByJeans, ...menSortByShoes, ...menSortByWatches].map(
+                  (product, i) => (
+                    <Flex
+                      key={i}
+                      justifyContent={"space-between"}
+                      m="auto"
+                      gap="10px"
+                      w="80%"
+                      mt="8px"
+                    >
+                      <Text fontSize={{ base: "10px", md: "12px", lg: "15px" }}>
+                        {product}
+                      </Text>
+                      <input
+                        type="radio"
+                        name="brand"
+                        value={product}
+                        checked={brand === product}
+                        onChange={setBrand}
+                      />
+                    </Flex>
+                  )
+                )}
               </Box>
+
+              {/* SORT & ORDER */}
               <Box bgColor={"gray.100"} p="20px" mt="15px" lineHeight={"30px"}>
                 <Text
                   color={"#f24973"}
                   fontSize={{ base: "12px", lg: "15px" }}
                   mb="10px"
+                  fontWeight={"600"}
                 >
-                  SORT BY PRICE, NAME
+                  SORT & ORDER
                 </Text>
                 <hr />
                 <Flex
-                  justifyContent={"center"}
-                  flexDirection={{ base: "column", md: "row" }}
                   m="auto"
+                  justifyContent={"space-around"}
+                  w="80%"
+                  mt="10px"
                   gap="10px"
                 >
-                  <select onChange={selectSortName} style={{ width: "80px" }}>
-                    <option>Sort By</option>
-                    <option value="heading">Name</option>
-                    <option value="discount_price">Price</option>
+                  <select
+                    onChange={setSort}
+                    style={{ width: "150px" }}
+                    value={sortBy}
+                  >
+                    <option value="">Sort By</option>
+                    <option value="price">Price</option>
+                    <option value="title">Title</option>
                   </select>
-
-                  <select onChange={selectOrder} style={{ width: "80px" }}>
-                    <option>Order</option>
-                    <option value="asc">High to Low</option>
-                    <option value="desc">Low to High</option>
+                  <select
+                    onChange={setOrderBy}
+                    style={{ width: "150px" }}
+                    value={order}
+                  >
+                    <option value="">Order By</option>
+                    <option value="asc">Asc</option>
+                    <option value="desc">Desc</option>
                   </select>
                 </Flex>
               </Box>
             </Box>
 
-            <Box
-              w={{ base: "70%", lg: "75%" }}
-              display={"grid"}
-              gridTemplateColumns={{
-                base: "repeat(2,1fr)",
-                md: "repeat(3,1fr)",
-                lg: "repeat(4,1fr)",
-              }}
-              justifyContent={"center"}
-              gap={{ base: "0px", lg: "20px" }}
+            {/* PRODUCTS GRID */}
+            <Flex
+              w="70%"
+              justifyContent="center"
+              gap={{ base: 5, lg: 10 }}
+              flexWrap={"wrap"}
+              mt="20px"
             >
-              {data.map((product: MenProducts) => (
-                <>
-                  {product.visible === true ? (
-                    <Box
-                      p={{ base: "2px", lg: "20px" }}
-                      borderRadius={"10%"}
-                      boxShadow="rgba(99, 99, 99, 0.2) 0px 2px 8px 0px"
-                      m="auto"
-                      mt="25px"
-                      h={{ base: "265px", md: "375px", lg: "470px" }}
-                      cursor={"pointer"}
-                      transition="all 0.4s ease-in-out"
-                      _hover={{
-                        transform: "scale(1.02)",
-                        boxShadow: "rgba(99, 99, 99, 0.4) 0px 4px 16px 0px",
-                      }}
-                    >
-                      <Link href={`/mens/${product._id}`}>
-                        <Image
-                          m="auto"
-                          w={{ base: "100px", md: "180px", lg: "200px" }}
-                          h={{ base: "150px", md: "250px", lg: "270px" }}
-                          src={product.image}
-                          alt="product_img"
-                        />
-                        <Heading
-                          m="auto"
-                          textAlign={"center"}
-                          mt="5px"
-                          fontSize={{ base: "16px", md: "18px", lg: "20px" }}
-                          color={"#f24973"}
-                        >
-                          {product.heading}
-                        </Heading>
-                      </Link>
-                      <Flex
-                        justifyContent={"center"}
-                        w={{ base: "100px", md: "180px", lg: "200px" }}
+              {data.length > 0 ? (
+                data.map((product) => (
+                  <Box
+                    key={product._id}
+                    border={"1px solid #f24973"}
+                    borderRadius={"10px"}
+                    maxW={"300px"}
+                    boxShadow="rgba(0, 0, 0, 0.1) 0px 4px 12px"
+                    p="10px"
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="space-between"
+                  >
+                    <Link href={`/mens/${product._id}`}>
+                      <Image
+                        src={product.image[0]}
+                        alt={product.title}
                         m="auto"
-                      >
-                        <Text
-                          m="auto"
-                          whiteSpace={"nowrap"}
-                          overflow={"hidden"}
-                          textAlign={"center"}
-                          w={{ base: "90px", md: "180px", lg: "250px" }}
-                          fontSize={{ base: "12px", md: "14px", lg: "16.5px" }}
-                        >
-                          {product.title}
-                        </Text>
-                        <Text
-                          ml="-7px"
-                          w={{ base: "10px", md: "10px", lg: "30px" }}
-                        >
-                          ..
-                        </Text>
-                      </Flex>
-                      <Text
-                        fontSize={{ base: "14px", md: "16px", lg: "18px" }}
-                        color="green"
-                      >
-                        {product.discount}
-                      </Text>
-                      <Flex justifyContent={"center"} gap="15px">
-                        <Text
-                          fontSize={{ base: "12px", md: "15px", lg: "18px" }}
-                          fontWeight={"600"}
-                        >
-                          ₹{product.discount_price}
-                        </Text>
-                        <Text
-                          fontSize={{ base: "12px", md: "15px", lg: "18px" }}
-                          color="red"
-                          textDecoration={"line-through"}
-                          fontWeight={"600"}
-                        >
-                          ₹{product.original_price}
-                        </Text>
-                      </Flex>
+                        w="90%"
+                        borderRadius="10px"
+                        cursor={"pointer"}
+                      />
+                    </Link>
+                    <Heading
+                      fontSize={"md"}
+                      noOfLines={2}
+                      mt="10px"
+                      color={"#f24973"}
+                      cursor={"pointer"}
+                    >
+                      {product.title}
+                    </Heading>
+                    <Text fontWeight={"600"}>${product.price}</Text>
 
-                      <Text
-                        fontSize={{ base: "10px", md: "14px", lg: "16.5px" }}
-                      >
-                        {product.offer}
-                      </Text>
-                      {product.availability === "" ? (
-                        ""
-                      ) : (
-                        <Text
-                          color="red"
-                          fontSize={{ base: "12px", lg: "16.5px" }}
-                        >
-                          {product.availability}
-                        </Text>
-                      )}
-                    </Box>
-                  ) : (
-                    ""
-                  )}
-                </>
-              ))}
-            </Box>
+                    <Button
+                      mt={3}
+                      colorScheme="pink"
+                      size="sm"
+                      onClick={() => {
+                        toast({
+                          title: "Added to Cart",
+                          description: `${product.title} added to your cart.`,
+                          status: "success",
+                          duration: 3000,
+                          isClosable: true,
+                          position: "top",
+                        });
+                      }}
+                      w="100%"
+                    >
+                      Add to Cart
+                    </Button>
+                  </Box>
+                ))
+              ) : (
+                <Text>No products found.</Text>
+              )}
+            </Flex>
           </Flex>
-          <Flex gap="20px" justifyContent={"center"} m="auto" mt="30px">
-            <Button
-              color={"#f24973"}
-              leftIcon={<ArrowBackIcon />}
-              isDisabled={page === 1}
-              onClick={() => setPage(page - 1)}
-            >
-              Previous
-            </Button>
-            <Button isDisabled color={"#f24973"} disabled>
-              {page}
-            </Button>
-            <Button
-              color={"#f24973"}
-              rightIcon={<ArrowForwardIcon />}
-              isDisabled={page === 13}
-              onClick={() => setPage(page + 1)}
-            >
-              Next
-            </Button>
-          </Flex>
+
+          {/* Pagination Component */}
+          <Pagination page={page} setPage={setPage} totalPages={10} />
         </Box>
       )}
     </>
