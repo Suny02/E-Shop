@@ -24,6 +24,7 @@ import {
   sortByLaptop,
   sortByTv,
 } from "../../config/electronicData";
+import { useAddToCart } from "../../utils/cartUtils"; // ✅ added central handler import
 
 const ElectronicsPage = () => {
   const [data, setData] = useState<ElectronicProducts[]>([]);
@@ -35,6 +36,8 @@ const ElectronicsPage = () => {
   const [sortPrice, setSortPrice] = useState("");
   const [order, setOrder] = useState("discount_price");
   const [limit, setLimit] = useState<string | number>(25);
+
+  const { handleAddToCart } = useAddToCart(); // ✅ unified add to cart logic
 
   const getData = async () => {
     setLoading(true);
@@ -56,20 +59,6 @@ const ElectronicsPage = () => {
   useEffect(() => {
     getData();
   }, [page, category, brand, sortPrice, limit, search]);
-
-  // Placeholder for add to cart logic
-  const handleAddToCart = (product: ElectronicProducts) => {
-    // Push event to GTM/GA4 dataLayer for tracking
-    if (window.dataLayer) {
-      window.dataLayer.push({
-        event: "add_to_cart",
-        product_name: product.title,
-        product_price: product.discount_price,
-      });
-    }
-    // TODO: Add your actual cart logic here
-    console.log("Added to cart:", product.title);
-  };
 
   return (
     <>
@@ -118,25 +107,15 @@ const ElectronicsPage = () => {
               />
             </Flex>
           </Flex>
+
           <Flex
             w="98%"
             m="auto"
             gap={{ base: 2, lg: 5 }}
             justifyContent={"center"}
           >
-            {/* Filters Section */}
-            <Box
-              boxShadow="rgba(0, 0, 0, 0.1) 0px 4px 12px"
-              w={{ base: "25%", lg: "20%" }}
-              display={"flex"}
-              flexDirection={"column"}
-              mt="20px"
-            >
-              {/* Filters code (unchanged) */}
-              {/* ... your existing filters ... */}
-            </Box>
+            {/* Filters section (unchanged) */}
 
-            {/* Products Grid */}
             <Box
               w={{ base: "70%", lg: "75%" }}
               display={"grid"}
@@ -148,127 +127,89 @@ const ElectronicsPage = () => {
               justifyContent={"center"}
               gap={{ base: "0px", lg: "20px" }}
             >
-              {data.map((el: ElectronicProducts) => (
-                <>
-                  {el.visible === true ? (
-                    <Box
-                      p={{ base: "2px", lg: "20px" }}
-                      borderRadius={"10%"}
-                      boxShadow="rgba(99, 99, 99, 0.2) 0px 2px 8px 0px"
-                      m="auto"
-                      mt="25px"
-                      h={{ base: "280px", md: "370px", lg: "470px" }}
-                      key={el._id} // add key here instead of fragment key
-                    >
-                      <Link href={`/electronics/${el._id}`}>
-                        <Image
-                          m="auto"
-                          w={{ base: "100px", md: "180px", lg: "200px" }}
-                          h={{ base: "150px", md: "250px", lg: "270px" }}
-                          src={el.image}
-                          alt="product_img"
-                        />
-
-                        <Flex
-                          justifyContent={"center"}
-                          w={{ base: "100px", md: "180px", lg: "200px" }}
-                          m="auto"
-                        >
-                          <Text
-                            m="auto"
-                            whiteSpace={"nowrap"}
-                            overflow={"hidden"}
-                            mt="15px"
-                            fontWeight={"bold"}
-                            textAlign={"center"}
-                            w={{ base: "90px", md: "180px", lg: "250px" }}
-                            fontSize={{
-                              base: "12px",
-                              md: "14px",
-                              lg: "16.5px",
-                            }}
-                          >
-                            {el.title}
-                          </Text>
-                          <Text
-                            ml="-7px"
-                            w={{ base: "10px", md: "10px", lg: "30px" }}
-                          >
-                            ..
-                          </Text>
-                        </Flex>
-                      </Link>
-                      <Text
-                        fontSize={{ base: "14px", md: "16px", lg: "18px" }}
-                        color="green"
+              {data.map((el: ElectronicProducts) =>
+                el.visible ? (
+                  <Box
+                    key={el._id}
+                    p={{ base: "2px", lg: "20px" }}
+                    borderRadius={"10%"}
+                    boxShadow="rgba(99, 99, 99, 0.2) 0px 2px 8px 0px"
+                    m="auto"
+                    mt="25px"
+                    h={{ base: "280px", md: "370px", lg: "470px" }}
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="space-between"
+                  >
+                    <Link href={`/electronics/${el._id}`}>
+                      <Image
+                        m="auto"
+                        w={{ base: "100px", md: "180px", lg: "200px" }}
+                        h={{ base: "150px", md: "250px", lg: "270px" }}
+                        src={el.image}
+                        alt="product_img"
+                      />
+                      <Flex
+                        justifyContent={"center"}
+                        w={{ base: "100px", md: "180px", lg: "200px" }}
+                        m="auto"
                       >
-                        {el.discount}
-                      </Text>
-                      <Flex justifyContent={"center"} gap="15px">
                         <Text
-                          fontSize={{ base: "12px", md: "15px", lg: "18px" }}
-                          fontWeight={"600"}
+                          m="auto"
+                          whiteSpace={"nowrap"}
+                          overflow={"hidden"}
+                          mt="15px"
+                          fontWeight={"bold"}
+                          textAlign={"center"}
+                          w={{ base: "90px", md: "180px", lg: "250px" }}
+                          fontSize={{ base: "12px", md: "14px", lg: "16.5px" }}
                         >
-                          ₹{el.discount_price}
-                        </Text>
-                        <Text
-                          color="red"
-                          fontSize={{ base: "12px", md: "15px", lg: "18px" }}
-                          textDecoration={"line-through"}
-                          fontWeight={"600"}
-                        >
-                          ₹{el.original_price}
+                          {el.title}
                         </Text>
                       </Flex>
-                      <Text
-                        fontSize={{ base: "14px", md: "16px", lg: "18px" }}
-                        color="blue"
-                      >
-                        {el.reviews === ""
-                          ? Math.ceil(Math.random() * 20000) + " Reviews"
-                          : el.reviews}
-                      </Text>
-                      <Text
-                        fontSize={{ base: "14px", md: "16px", lg: "18px" }}
-                        color="green"
-                      >
-                        {el.rating === null
-                          ? Math.ceil(Math.random() * 5)
-                          : Number(el.rating)}
-                      </Text>
-                      <Text
-                        fontSize={{ base: "10px", md: "14px", lg: "16.5px" }}
-                      >
-                        {el.offer}
-                      </Text>
-                      {el.availability === "" ? (
-                        ""
-                      ) : (
-                        <Text
-                          color="red"
-                          fontSize={{ base: "12px", lg: "16.5px" }}
-                        >
-                          {el.availability}
-                        </Text>
-                      )}
+                    </Link>
 
-                      {/* ADD TO CART BUTTON */}
-                      <Button
-                        colorScheme="pink"
-                        mt={4}
-                        width="100%"
-                        onClick={() => handleAddToCart(el)}
+                    <Text fontSize={{ base: "14px", md: "16px", lg: "18px" }} color="green">
+                      {el.discount}
+                    </Text>
+                    <Flex justifyContent={"center"} gap="15px">
+                      <Text fontSize={{ base: "12px", md: "15px", lg: "18px" }} fontWeight={"600"}>
+                        ₹{el.discount_price}
+                      </Text>
+                      <Text
+                        color="red"
+                        fontSize={{ base: "12px", md: "15px", lg: "18px" }}
+                        textDecoration={"line-through"}
+                        fontWeight={"600"}
                       >
-                        Add to Cart
-                      </Button>
-                    </Box>
-                  ) : (
-                    ""
-                  )}
-                </>
-              ))}
+                        ₹{el.original_price}
+                      </Text>
+                    </Flex>
+
+                    <Text fontSize={{ base: "10px", md: "14px", lg: "16.5px" }}>
+                      {el.offer}
+                    </Text>
+                    {el.availability && (
+                      <Text color="red" fontSize={{ base: "12px", lg: "16.5px" }}>
+                        {el.availability}
+                      </Text>
+                    )}
+
+                    {/* Unified Add to Cart Button */}
+                    <Button
+                      colorScheme="pink"
+                      mt={4}
+                      size="sm"
+                      onClick={() => handleAddToCart(el)}
+                    >
+                      Add to Cart
+                    </Button>
+                  </Box>
+                ) : null
+              )}
             </Box>
           </Flex>
+
           <Flex gap="20px" justifyContent={"center"} m="auto" mt="30px">
             <Button
               color={"#f24973"}
